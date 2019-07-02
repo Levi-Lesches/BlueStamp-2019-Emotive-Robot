@@ -1,33 +1,30 @@
-
 // REMINDER: File names need to be all-caps
-// TODO: attach speaker
+
+// Specs on UNO
+// Storage space: 27%
+// dynamic memory: 69%
 
 #include <WaveHC.h>
-// #include <WaveUtil.h>
-// #include <SD.h>
 
-SdReader sdCard;
-FatVolume volume;
-FatReader fatRoot, file;
-WaveHC wave;
-
-// File root;
+FatReader root;
 
 void play(String stringName, bool interrupt) {
 	// Copy the filename to a char array
-	int length = stringName.length() + 2;
-	char name[length];
-	stringName.toCharArray(name, length);
+	int length = stringName.length() + 2;  // get the length of the filename
+	char name[length];  // declare the array
+	stringName.toCharArray(name, length);  // store the string in the array
 
 	// Actually play the file
+	WaveHC wave;  // store audio data
 	Serial.print("Playing ");
 	Serial.println(name);
-	file.open (fatRoot, name);
-	if (!wave.create (file))  // Invalid WAVE file
+	FatReader file;  // declare the file
+	file.open (root, name);  // store data in the file
+	if (!wave.create (file))  // Invalid .wav file
 		Serial.println ("Not a valid wave file");
-	wave.play();
+	wave.play();  // actually play the .wav file
 	if (interrupt) {  // need to stop all other code
-		while (wave.isplaying) {
+		while (wave.isplaying) {  // print dots to the Serial monitor
 			Serial.print(".");
 			delay (100);
 		}
@@ -35,17 +32,15 @@ void play(String stringName, bool interrupt) {
 }
 
 void setup() {
-	// if (!SD.begin()) {
-	// 	Serial.println ("Cannot open SD card");
-	// 	while(true);
-	// }
-	// root = SD.open ("/");
 	Serial.begin (9600);
 	Serial.println("Initializing SD card...");
+	SdReader sdCard;  // declare the SD card
+	FatVolume volume;  // Needed for reading the SD card
 	if (!sdCard.init()) Serial.println ("Card could not be read");
-	sdCard.partialBlockRead(true);
+	sdCard.partialBlockRead(true);  // Cool little trick for faster reading
+	// This just initializes file reading and writing
 	if (!volume.init(sdCard)) Serial.println ("Volume could not be opened");
-	if (!fatRoot.openRoot(volume)) Serial.println ("Root could not be opened");
+	if (!root.openRoot(volume)) Serial.println ("Root could not be opened");
 	Serial.println ("Card initialized");
 }
 
