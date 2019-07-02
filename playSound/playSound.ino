@@ -2,11 +2,13 @@
 
 // Specs on UNO
 // Storage space: 27%
-// dynamic memory: 69%
+// dynamic memory: 71%
 
 #include <WaveHC.h>
 
 FatReader root;
+FatVolume volume;  // Needed for reading the SD card
+SdReader sdCard;  // declare the SD card
 
 void play(String stringName, bool interrupt) {
 	// Copy the filename to a char array
@@ -16,9 +18,10 @@ void play(String stringName, bool interrupt) {
 
 	// Actually play the file
 	WaveHC wave;  // store audio data
+	FatReader file;  // declare the file
+
 	Serial.print("Playing ");
 	Serial.println(name);
-	FatReader file;  // declare the file
 	file.open (root, name);  // store data in the file
 	if (!wave.create (file))  // Invalid .wav file
 		Serial.println ("Not a valid wave file");
@@ -34,8 +37,7 @@ void play(String stringName, bool interrupt) {
 void setup() {
 	Serial.begin (9600);
 	Serial.println("Initializing SD card...");
-	SdReader sdCard;  // declare the SD card
-	FatVolume volume;  // Needed for reading the SD card
+
 	if (!sdCard.init()) Serial.println ("Card could not be read");
 	sdCard.partialBlockRead(true);  // Cool little trick for faster reading
 	// This just initializes file reading and writing
