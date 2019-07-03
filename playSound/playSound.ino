@@ -1,8 +1,22 @@
-// REMINDER: File names need to be all-caps
+/*
+	REMINDER: File names need to be all-caps
 
-// Specs on UNO
-// Storage space: 27%
-// dynamic memory: 71%
+	Specs on UNO
+	Storage space: 27%
+	dynamic memory: 71%
+
+	pins that still work with audio: 
+	A0,
+	A1,
+	A2, 
+	A3, 
+	A4,
+	A5,
+	6,
+	7,
+	8,
+	9,
+*/
 
 #include <WaveHC.h>
 
