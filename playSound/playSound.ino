@@ -1,22 +1,27 @@
 /*
 	REMINDER: File names need to be all-caps
+	TODO: replace WaveHC library
 
 	Specs on UNO
 	Storage space: 27%
 	dynamic memory: 71%
 
 	pins that still work with audio: 
-	A0,
-	A1,
+	A0, (ultra 1)
+	A1, (ultra 2)
 	A2, 
 	A3, 
 	A4,
 	A5,
-	6,
+	6, (BUILTIN, 
 	7,
 	8,
 	9,
 */
+
+// 2, 2, 2, 2, 2
+// servo (2), ultrasonic (2), LCD (2), LED (4)
+// = 2 + 2 + 2 + 4 = 6 + 4 = 10
 
 #include <WaveHC.h>
 
