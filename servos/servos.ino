@@ -1,7 +1,5 @@
 #include <ServoTimer2.h>
 
-// #include <Servo.h>
-
 // for servo.write: 
 // do 25/3 (angle) + 750
 

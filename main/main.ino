@@ -1,11 +1,9 @@
 /*
-	REMINDER: Wave File names need to be all-caps
 	TODO: replace WaveHC library
-	TODO: update specs
 
 	Specs on UNO
-	Storage space: 27%
-	dynamic memory: 71%
+	Storage space: 30%
+	dynamic memory: 73%
 
 	pins that still work with audio: 
 	A0, (ultra 1)
@@ -14,8 +12,8 @@
 	A3, 
 	A4,
 	A5,
-	6, (BUILTIN, 
-	7,
+	6, (Servo pivot)
+	7, (Servo lift)
 	8,
 	9,
 */
@@ -36,6 +34,8 @@ FatVolume volume;  // Needed for reading the SD card
 SdReader sdCard;  // declare the SD card
 
 void play(String stringName, bool interrupt) {
+	// REMINDER: Wave File names need to be all-caps
+
 	// Copy the filename to a char array
 	int length = stringName.length() + 2;  // get the length of the filename
 	char name[length];  // declare the array
@@ -60,9 +60,9 @@ void play(String stringName, bool interrupt) {
 }
 
 float getPulse (int angle) {
+	// formula here is: (25/3)(angle) + 750
 	return (slope * angle) + intercept;
 }
-
 
 void setup() {
 	Serial.begin (9600);
