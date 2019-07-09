@@ -15,7 +15,7 @@
 	6, (Servo pivot)
 	7, (Servo lift)
 	8,
-	9,
+	9, (BUILTIN)
 */
 
 #include <WaveHC.h>
@@ -34,6 +34,7 @@ FatVolume volume;  // Needed for reading the SD card
 SdReader sdCard;  // declare the SD card
 
 void play(String stringName, bool interrupt) {
+	// Plays the name of this file 
 	// REMINDER: Wave File names need to be all-caps
 
 	// Copy the filename to a char array
@@ -47,7 +48,11 @@ void play(String stringName, bool interrupt) {
 
 	Serial.print("Playing ");
 	Serial.println(name);
-	file.open (root, name);  // store data in the file
+	if (!file.open (root, name)) {  // store data in the file
+		Serial.print(stringName); 
+		Serial.println ("Does not exist");
+	}
+
 	if (!wave.create (file))  // Invalid .wav file
 		Serial.println ("Not a valid wave file");
 	wave.play();  // actually play the .wav file
@@ -60,6 +65,7 @@ void play(String stringName, bool interrupt) {
 }
 
 float getPulse (int angle) {
+	// ServoTimers need a pulse width instead of an angle
 	// formula here is: (25/3)(angle) + 750
 	return (slope * angle) + intercept;
 }
