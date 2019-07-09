@@ -10,8 +10,8 @@
 	A1, (ultra 2)
 	A2, 
 	A3, 
-	A4,
-	A5,
+	A4, (I2C SDA)
+	A5, (I2C SCL)
 	6, (Servo pivot)
 	7, (Servo lift)
 	8,
