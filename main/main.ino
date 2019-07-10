@@ -1,5 +1,7 @@
 /*
 	TODO: replace WaveHC library
+	TODO: replace specs
+	TODO: remove <Adafruit_GFX.h>
 
 	Specs on UNO
 	Storage space: 30%
@@ -20,12 +22,30 @@
 
 #include <WaveHC.h>
 #include <ServoTimer2.h>
+#include <LiquidCrystal_I2C.h>
+#include <Adafruit_LEDBackpack.h>
+#include <Adafruit_GFX.h>  // for bitmap
 
 #define PIVOT 6
 #define LIFT 7
 
+// https://xantorohara.github.io/led-matrix-editor/#3c4299a581a5423c
+const uint8_t smile[8] = {
+  B00111100,
+  B01000010,
+  B10100101,
+  B10000001,
+  B10100101,
+  B10011001,
+  B01000010,
+  B00111100
+};
+
 const float slope = (float)25/3;
 const float intercept = 750;
+
+Adafruit_8x8matrix matrix = Adafruit_8x8matrix();
+LiquidCrystal_I2C lcd = LiquidCrystal_I2C(0x27, 16, 2);
 
 ServoTimer2 pivot, lift;
 
@@ -70,6 +90,11 @@ float getPulse (int angle) {
 	return (slope * angle) + intercept;
 }
 
+void drawBitmap(uint8_t bitmap[8]) {
+  matrix.drawBitmap (0, 0, bitmap, 8, 8, LED_ON);
+  matrix.writeDisplay();
+}
+
 void setup() {
 	Serial.begin (9600);
 
@@ -85,6 +110,14 @@ void setup() {
 	// Setup servos 
 	pivot.attach (PIVOT);
 	lift.attach (LIFT);
+
+	// Setup the LED matrices (they share the same pins)
+	matrix.begin(0x70);
+
+	// LCD screen
+	lcd.init();
+	lcd.backlight();
+	lcd.clear();
 }
 
 void loop(){
@@ -108,4 +141,10 @@ void loop(){
 	pivot.write (pulse);
 	lift.write (pulse);
 	delay (500);	
+
+	matrix.clear();
+	matrix.writeDisplay();
+	delay (500);
+	drawBitmap(smile);
+	delay (500);
 }
