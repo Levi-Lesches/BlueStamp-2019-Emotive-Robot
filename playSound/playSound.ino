@@ -1,6 +1,7 @@
 /*
 	REMINDER: File names need to be all-caps
 	TODO: replace WaveHC library
+	TODO: Check wave.play for references to FatVolume and SdReader 
 
 	Specs on UNO
 	Storage space: 27%
@@ -26,8 +27,10 @@
 #include <WaveHC.h>
 
 FatReader root;
-FatVolume volume;  // Needed for reading the SD card
-SdReader sdCard;  // declare the SD card
+WaveHC wave;  // store audio data
+FatReader file;  // declare the file
+FatVolume volume = FatVolume();  // Needed for reading the SD card
+SdReader sdCard = SdReader();  // declare the SD card
 
 void play(String stringName, bool interrupt) {
 	// Copy the filename to a char array
@@ -36,9 +39,6 @@ void play(String stringName, bool interrupt) {
 	stringName.toCharArray(name, length);  // store the string in the array
 
 	// Actually play the file
-	WaveHC wave;  // store audio data
-	FatReader file;  // declare the file
-
 	Serial.print("Playing ");
 	Serial.println(name);
 	file.open (root, name);  // store data in the file
@@ -57,6 +57,7 @@ void setup() {
 	Serial.begin (9600);
 	Serial.println("Initializing SD card...");
 
+	delay (1000);
 	if (!sdCard.init()) Serial.println ("Card could not be read");
 	sdCard.partialBlockRead(true);  // Cool little trick for faster reading
 	// This just initializes file reading and writing

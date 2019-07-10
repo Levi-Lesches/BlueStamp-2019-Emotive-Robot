@@ -1,11 +1,12 @@
 /*
 	TODO: replace WaveHC library
+	TODO: re-theme Arduino
 	TODO: replace specs
 	TODO: remove <Adafruit_GFX.h>
 
 	Specs on UNO
-	Storage space: 30%
-	dynamic memory: 73%
+	Storage space: 50%
+	dynamic memory: 90%
 
 	pins that still work with audio: 
 	A0, (ultra 1)
