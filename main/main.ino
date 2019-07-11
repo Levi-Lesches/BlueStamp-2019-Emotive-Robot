@@ -9,8 +9,8 @@
 	dynamic memory: 90%
 
 	pins that still work with audio: 
-	A0, (ultra 1)
-	A1, (ultra 2)
+	A0,
+	A1,
 	A2, 
 	A3, 
 	A4, (I2C SDA)
@@ -22,13 +22,18 @@
 */
 
 #include <WaveHC.h>
-#include <ServoTimer2.h>
+// #include <ServoTimer2.h>
 #include <LiquidCrystal_I2C.h>
 #include <Adafruit_LEDBackpack.h>
-#include <Adafruit_GFX.h>  // for bitmap
+// #include <Adafruit_GFX.h>  // for bitmap
 
 #define PIVOT 6
 #define LIFT 7
+#define BUILTIN A0
+#define TRIGGER A2
+#define ECHO A3
+
+#define THRESHOLD 7
 
 // https://xantorohara.github.io/led-matrix-editor/#3c4299a581a5423c
 const uint8_t smile[8] = {
@@ -46,13 +51,26 @@ const float slope = (float)25/3;
 const float intercept = 750;
 
 Adafruit_8x8matrix matrix = Adafruit_8x8matrix();
-LiquidCrystal_I2C lcd = LiquidCrystal_I2C(0x27, 16, 2);
+// LiquidCrystal_I2C lcd = LiquidCrystal_I2C(0x27, 16, 2);
 
 ServoTimer2 pivot, lift;
 
 FatReader root;
 FatVolume volume;  // Needed for reading the SD card
 SdReader sdCard;  // declare the SD card
+
+bool isApproaching() {
+	digitalWrite(TRIGGER, LOW);
+	delayMicroseconds(2);
+
+	digitalWrite(TRIGGER, HIGH);
+	delayMicroseconds(10);
+	digitalWrite(TRIGGER, LOW);
+
+	long distance = pulseIn(ECHO, HIGH) * 0.034 / 2;
+
+	return distance < THRESHOLD;
+}
 
 void play(String stringName, bool interrupt) {
 	// Plays the name of this file 
@@ -72,10 +90,13 @@ void play(String stringName, bool interrupt) {
 	if (!file.open (root, name)) {  // store data in the file
 		Serial.print(stringName); 
 		Serial.println ("Does not exist");
+		return;
 	}
 
-	if (!wave.create (file))  // Invalid .wav file
+	if (!wave.create (file))  {  // Invalid .wav file
 		Serial.println ("Not a valid wave file");
+		return;
+	}
 	wave.play();  // actually play the .wav file
 	if (interrupt) {  // need to stop all other code
 		while (wave.isplaying) {  // print dots to the Serial monitor
@@ -92,12 +113,14 @@ float getPulse (int angle) {
 }
 
 void drawBitmap(uint8_t bitmap[8]) {
-  matrix.drawBitmap (0, 0, bitmap, 8, 8, LED_ON);
-  matrix.writeDisplay();
+	// Serial.println("Imagine this working...");
+  // matrix.drawBitmap (0, 0, bitmap, 8, 8, LED_ON);
+  // matrix.writeDisplay();
 }
 
 void setup() {
 	Serial.begin (9600);
+	pinMode (BUILTIN, OUTPUT);
 
 	// Setup SD card
 	Serial.println("Initializing SD card...");
@@ -113,39 +136,47 @@ void setup() {
 	lift.attach (LIFT);
 
 	// Setup the LED matrices (they share the same pins)
-	matrix.begin(0x70);
+	matrix.begin();
 
 	// LCD screen
-	lcd.init();
-	lcd.backlight();
-	lcd.clear();
+	// lcd.init();
+	// lcd.backlight();
+	// lcd.clear();
+	// lcd.print ("Hello, World!");
+
+	// Sensor setup
+	pinMode (TRIGGER, OUTPUT);
+	pinMode (ECHO, INPUT);
 }
 
+
 void loop(){
-	// Audio control
-	play("TEMP.WAV", false);
-
-	// Servo sweep
-	float pulse;
-	// set both servos to 0
-	pulse = getPulse(0);
-	pivot.write (pulse);
-	lift.write (pulse);
-	delay (1000);  // allow time from 180 to 0
-	// set both servos to 90
-	pulse = getPulse(90);
-	pivot.write (pulse);
-	lift.write (pulse);
-	delay (500);	
-	// Set both servos to 180
-	pulse = getPulse(180);
-	pivot.write (pulse);
-	lift.write (pulse);
-	delay (500);	
-
-	matrix.clear();
-	matrix.writeDisplay();
-	delay (500);
-	drawBitmap(smile);
-	delay (500);
+	if (isApproaching()) {
+		Serial.println ("Sensor triggered");
+		// Audio control
+		play("TEMP.WAV", false);
+		drawBitmap(smile);
+		digitalWrite(BUILTIN, HIGH);
+		// Servo sweep
+		float pulse;
+		// set both servos to 0
+		pulse = getPulse(0);
+		pivot.write (pulse);
+		lift.write (pulse);
+		delay (1000);  // allow time from 180 to 0
+		// set both servos to 90
+		pulse = getPulse(90);
+		pivot.write (pulse);
+		lift.write (pulse);
+		delay (500);	
+		// Set both servos to 180
+		pulse = getPulse(180);
+		pivot.write (pulse);
+		lift.write (pulse);
+		delay (500);	
+		digitalWrite(BUILTIN, LOW);
+	} else {
+		matrix.clear();
+		matrix.writeDisplay();
+	}
 }

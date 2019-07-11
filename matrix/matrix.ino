@@ -1,6 +1,9 @@
 #include <Adafruit_LEDBackpack.h>
 #include <Adafruit_GFX.h>
 
+#define SIGNAL 4
+
+bool processing = false;
 Adafruit_8x8matrix matrix = Adafruit_8x8matrix();
 
 // SCL to A5
@@ -19,20 +22,53 @@ const uint8_t smile[8] = {
 };
 
 void drawBitmap(uint8_t bitmap[8]) {
+	Serial.println("Showing smiley face");
 	matrix.drawBitmap (0, 0, bitmap, 8, 8, LED_ON);
 	matrix.writeDisplay();
 }
 
+void setMatrix() {
+	drawBitmap(smile);
+	digitalWrite (13, HIGH);
+}
+
+void clearMatrix() {
+	matrix.clear();
+	matrix.writeDisplay();
+	digitalWrite(13, LOW);
+	Serial.println("Clearing matrix");
+}
+
+bool gotSignal() {
+	int signal = digitalRead(SIGNAL);
+	return signal == HIGH;
+}
+
 void setup() {
+	Serial.begin(9600);
 	matrix.begin(0x70);
+	pinMode (SIGNAL, INPUT);
+	pinMode (13, OUTPUT);
 }
 
 void loop() {
-	matrix.clear();
-	matrix.writeDisplay();
-	delay (500);
-	drawBitmap(smile);
-	delay (500);
+	Serial.print ("Processing? ");
+	Serial.print (processing);
+	Serial.println (". Hotel? Trivago.");
+	if (processing) {  // busy
+		if (!gotSignal()) {  // shouldn't be busy anymore
+			processing = false;
+			// clearMatrix();
+			matrix.clear();
+			Serial.println("Clearing matrix");
+			matrix.writeDisplay();
+			digitalWrite(13, LOW);
+		}
+	} else if (gotSignal()) {  // not busy but should be
+		processing = true;
+		setMatrix();
+	}
+	delay (10);
 }
 
 // some other methods include: 
