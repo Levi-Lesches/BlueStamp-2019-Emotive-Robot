@@ -1,79 +1,85 @@
 /*
-	SOLUTIONS: 
-		sdcard.init(TRUE)
+	SOLUTIONS FOR WORKING WITH I2C AND WAVE SHIELD AT THE SAME TIME
+		sdcard.init(*TRUE*)
 		move all sound-related variables to global
+		replace the timer for the WaveHC library
 
 	TODO: replace WaveHC library
-	TODO: re-theme Arduino
 	TODO: replace specs
-	TODO: remove <Adafruit_GFX.h>
+	TODO: re-theme Arduino syntax
 
 	Specs on UNO
-	Storage space: 50%
-	dynamic memory: 90%
+		Storage space: 33%
+		dynamic memory: 75%
 
-	pins that still work with audio: 
-	A0,
-	A1,
-	A2, 
-	A3, 
-	A4, (I2C SDA)
-	A5, (I2C SCL)
-	6, (Servo pivot)
-	7, (Servo lift)
-	8,
-	9, (BUILTIN)
+	pin wiring: 
+		A0 --> BUILTIN
+		A1 --> Free
+		A2 --> Ultrasonic trigger [TRIGGER]
+		A3 --> Ultrasonic echo [ECHO]
+		A4 --> I2C SDA -- temporarily moved to slave Arduino
+		A5 --> I2C SCL -- temporarily moved to slave Arduino
+		0 --> RX (Serial output)
+		1 --> TX (Serial input -- will be used for Bluetooth)
+		2 --> Wave Shield
+		3 --> Wave Shield
+		4 --> Wave Shield
+		5 --> Wave Shield
+		6 --> Pivot servo [PIVOT]
+		7 --> Lift servo [LEFI]
+		8 --> Left eyebrow servo [LEFT_EYEBROW]
+		9 --> Right eyebrow servo [RIGHT_EYEBROW]
+		10 --> Wave Shield
+		11 --> Wave Shield
+		12 --> Wave Shield
+		13 --> Wave Shield
 */
 
 #include <WaveHC.h>
 #include <ServoTimer2.h>
-// #include <LiquidCrystal_I2C.h>
-// #include <Adafruit_LEDBackpack.h>
-// #include <Adafruit_GFX.h>  // for bitmap
 
 #define PIVOT 6
 #define LIFT 7
 #define BUILTIN A0
 #define TRIGGER A2
 #define ECHO A3
+#define LEFT_EYEBROW 8
+#define RIGHT_EYEBROW 9
 
-#define THRESHOLD 7
+#define SENSOR_THRESHOLD 7
 
-// https://xantorohara.github.io/led-matrix-editor/#3c4299a581a5423c
-// const uint8_t smile[8] = {
-//   B00111100,
-//   B01000010,
-//   B10100101,
-//   B10000001,
-//   B10100101,
-//   B10011001,
-//   B01000010,
-//   B00111100
-// };
-
+// When using ServoTimer2, you need to send the width of the voltage pulse,
+// not an angle. These are used in getPulse(int) to calculate the width 
+// based on the desired angle 
 const float slope = (float)25/3;
 const float intercept = 750;
 
-// Adafruit_8x8matrix matrix = Adafruit_8x8matrix();
-// LiquidCrystal_I2C lcd = LiquidCrystal_I2C(0x27, 16, 2);
+// Using ServoTimer2 instead of Servo since 
+// the Wave Shield uses the default timer
+ServoTimer2 pivot, lift, left_eyebrow, right_eyebrow;
 
-ServoTimer2 pivot, lift;
-
-FatReader root;
+// Variables for reading the SD card
+FatReader root;     // keep a reference to the root directory
 FatVolume volume;  // Needed for reading the SD card
 SdReader sdCard;  // declare the SD card
 
 bool isApproaching() {
+	/* This function returns whether the user is close to the sensor */
+
+	// Flush the current 
 	digitalWrite(TRIGGER, LOW);
 	delayMicroseconds(2);
 
+	// Trigger a 10 micro-second sound wave
 	digitalWrite(TRIGGER, HIGH);
 	delayMicroseconds(10);
 	digitalWrite(TRIGGER, LOW);
 
+	// Read the incoming sound wave
 	long distance = pulseIn(ECHO, HIGH) * 0.034 / 2;
 
-	return distance < THRESHOLD;
+	// Returns the distance (I'm relatively sure it's cm)
+	return distance < SENSOR_THRESHOLD;
 }
 
 void play(String stringName, bool interrupt) {
@@ -88,12 +94,11 @@ void play(String stringName, bool interrupt) {
 	// Actually play the file
 	WaveHC wave;  // store audio data
 	FatReader file;  // declare the file
-
 	Serial.print("Playing ");
 	Serial.println(name);
 	if (!file.open (root, name)) {  // store data in the file
 		Serial.print(stringName); 
-		Serial.println ("Does not exist");
+		Serial.println (" does not exist");
 		return;
 	}
 
@@ -113,14 +118,9 @@ void play(String stringName, bool interrupt) {
 float getPulse (int angle) {
 	// ServoTimers need a pulse width instead of an angle
 	// formula here is: (25/3)(angle) + 750
+	// constants are defined at the top of the file
 	return (slope * angle) + intercept;
 }
-
-// void drawBitmap(uint8_t bitmap[8]) {
-// 	// Serial.println("Imagine this working...");
-//   // matrix.drawBitmap (0, 0, bitmap, 8, 8, LED_ON);
-//   // matrix.writeDisplay();
-// }
 
 void setup() {
 	Serial.begin (9600);
@@ -138,15 +138,8 @@ void setup() {
 	// Setup servos 
 	pivot.attach (PIVOT);
 	lift.attach (LIFT);
-
-	// Setup the LED matrices (they share the same pins)
-	// matrix.begin();
-
-	// LCD screen
-	// lcd.init();
-	// lcd.backlight();
-	// lcd.clear();
-	// lcd.print ("Hello, World!");
+	left_eyebrow.attach (LEFT_EYEBROW);
+	right_eyebrow.attach (RIGHT_EYEBROW);
 
 	// Sensor setup
 	pinMode (TRIGGER, OUTPUT);
@@ -158,31 +151,33 @@ void loop(){
 	if (isApproaching()) {
 		Serial.println ("Sensor triggered");
 		// Audio control
+
 		play("TEMP.WAV", false);
-		// drawBitmap(smile);
-		// lcd.print ("Danger!");
-		digitalWrite(BUILTIN, HIGH);
+
 		// Servo sweep
+		digitalWrite(BUILTIN, HIGH);
 		float pulse;
-		// set both servos to 0
+		// set servos to 0
 		pulse = getPulse(0);
 		pivot.write (pulse);
 		lift.write (pulse);
+		left_eyebrow.write (pulse);
+		right_eyebrow.write (pulse);
 		delay (1000);  // allow time from 180 to 0
-		// set both servos to 90
+		// set servos to 90
 		pulse = getPulse(90);
 		pivot.write (pulse);
 		lift.write (pulse);
+		left_eyebrow.write (pulse);
+		right_eyebrow.write (pulse);
 		delay (500);	
-		// Set both servos to 180
+		// Set servos to 180
 		pulse = getPulse(180);
 		pivot.write (pulse);
 		lift.write (pulse);
+		left_eyebrow.write (pulse);
+		right_eyebrow.write (pulse);
 		delay (500);	
 		digitalWrite(BUILTIN, LOW);
-	} else {
-		// matrix.clear();
-		// matrix.writeDisplay();
-		// lcd.clear();
 	}
 }
