@@ -1,13 +1,14 @@
+// SCL to A5
+// SDA to A4
+
 #include <Adafruit_LEDBackpack.h>
-#include <Adafruit_GFX.h>
+#include <LiquidCrystal_I2C.h>
 
 #define SIGNAL 4
 
 bool processing = false;
 Adafruit_8x8matrix matrix = Adafruit_8x8matrix();
-
-// SCL to A5
-// SDA to A4
+LiquidCrystal_I2C lcd = LiquidCrystal_I2C(0x27, 16, 2);
 
 // https://xantorohara.github.io/led-matrix-editor/#3c4299a581a5423c
 const uint8_t smile[8] = {
@@ -22,24 +23,61 @@ const uint8_t smile[8] = {
 };
 
 void drawBitmap(uint8_t bitmap[8]) {
+	Serial.println("Showing smiley face");
 	matrix.drawBitmap (0, 0, bitmap, 8, 8, LED_ON);
 	matrix.writeDisplay();
+}
+
+void setMatrix() {
+	drawBitmap(smile);
+	digitalWrite (13, HIGH);
 }
 
 void clearMatrix() {
 	matrix.clear();
 	matrix.writeDisplay();
+	digitalWrite(13, LOW);
+	Serial.println("Clearing matrix");
+}
+
+void setLCD() {
+	lcd.print ("Danger!");
+}
+
+void clearLCD() {
+	lcd.clear();
+}
+
+bool gotSignal() {
+	int signal = digitalRead(SIGNAL);
+	return signal == HIGH;
 }
 
 void setup() {
+	Serial.begin(9600);
 	matrix.begin(0x70);
+	lcd.init();
+	lcd.backlight();
+	lcd.clear();
+	pinMode (SIGNAL, INPUT);
+	pinMode (13, OUTPUT);
 }
 
 void loop() {
-	drawBitmap(smile);
-	delay (500);
-	clearMatrix();
-	delay (500);
+	if (processing) {  // busy
+		if (!gotSignal()) {  // shouldn't be busy anymore
+			Serial.println ("Clearing up");
+			processing = false;
+			clearMatrix();
+			clearLCD();
+		}
+	} else if (gotSignal()) {  // not busy but should be
+		Serial.println ("Setting up");
+		processing = true;
+		setMatrix();
+		setLCD();
+	}
+	delay (10);
 }
 
 // some other methods include: 
