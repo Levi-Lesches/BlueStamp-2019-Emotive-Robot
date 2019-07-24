@@ -1,0 +1,13 @@
+RESPONSIBILITIES 
+
+HARDWARE
+
+master -- emotion: 
+  head movement
+  eyebrows
+  eyes
+  lcd screen
+  proximity sensor
+
+slave -- sound: 
+  wave shield
