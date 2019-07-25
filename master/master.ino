@@ -12,8 +12,6 @@
 	More details can be found in the code for the slave Arduino
 
 	Wiring for the master Arduino:
-		0 --> RX
-		1 --> TX
 		2 --> pan servo (PAN)
 		3 --> tilt servo (TILT)
 		4 --> left eyebrow servo (LEFT_EYEBROW)
@@ -141,11 +139,19 @@ int movementDelay = 5; // seconds, don't worry
 Emotion emotion = NEUTRAL;
 MovementFrequency movementFrequency = NATURAL;
 
+void sendSignal (int value) {
+	// 0 is neutral, anything else is valid
+	// to avoid 0, add 1 to the value
+	analogWrite (SIGNAL, value + 1);
+	delay (500);
+	analogWrite (SIGNAL, 0);
+}
+
 void moveHead() {
 	int angle = random (HEAD_MIN_ANGLE, HEAD_MAX_ANGLE);
 	pan.write(angle);
 	tilt.write(angle);
-	analogWrite (SIGNAL, MOVING_SOUNDS[emotion]);
+	sendSignal(MOVING_SOUNDS[emotion]);
 }
 
 void setEyebrows(bool direction = NULL);
@@ -173,7 +179,7 @@ void drawBitmap(uint8_t bitmap[8]) {
 void blink() {
 	drawBitmap(BITMAPS[0]);
 	delay(BLINK_DELAY);
-	analogWrite(SIGNAL, BLINK_SOUND);
+	sendSignal(BLINK_SOUND);
 	drawBitmap(BITMAPS[emotion]);
 }
 
@@ -192,7 +198,7 @@ void setEmotion(Emotion newEmotion) {
 	drawBitmap();
 	setEyebrows();
 	printMessage();
-	analogWrite (SIGNAL, SOUNDS[emotion]);
+	sendSignal(SOUNDS[emotion]);
 }
 
 bool isApproaching() {
