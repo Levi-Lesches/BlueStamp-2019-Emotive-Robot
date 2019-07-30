@@ -12,16 +12,16 @@
 	More details can be found in the code for the slave Arduino
 
 	Wiring for the master Arduino:
+		A3 --> proximity sensor echo (ECHO)
+		A2 --> proximity sensor trigger (TRIGGER)
 		2 --> pan servo (PAN)
 		3 --> tilt servo (TILT)
 		4 --> left eyebrow servo (LEFT_EYEBROW)
 		5 --> right eyebrow servo (RIGHT_EYEBROW)
-		6 --> proximity sensor echo (ECHO)
-		7 --> proximity sensor trigger (TRIGGER)
 
 	Specs: 
-		Storage space: 41% 
-		Dynamic memory: 31%
+		Storage space: 42% 
+		Dynamic memory: 36%
 */
 
 #include <Adafruit_LEDBackpack.h>
@@ -35,16 +35,16 @@
 #define RIGHT_EYEBROW 5
 
 // Proximity sensor
-#define ECHO 6
-#define TRIGGER 7
+#define ECHO A3
+#define TRIGGER A2
 #define SENSOR_THRESHOLD 7  // cm, I believe
 
 // Blinking
-#define BLINK_DELAY 500
+#define BLINK_DELAY 50
 #define BLINK_INTERVAL 3000
 
 // Moving the head
-#define HEAD_MIN_ANGLE 20
+#define HEAD_MIN_ANGLE 60
 #define HEAD_MAX_ANGLE 160
 
 // Misc.
@@ -108,7 +108,7 @@ enum MovementFrequency {
 const int movementDelays[NUM_MOVEMENT_FREQUENCIES] = {2, 5};
 
 const MovementFrequency MOVEMENT_FREQUENCIES[NUM_EMOTIONS] = {
-	NATURAL, ALERT,
+	ALERT, NATURAL,
 };
 
 const bool EYEBROW_DIRECTIONS[NUM_EMOTIONS] = {
@@ -134,9 +134,9 @@ LiquidCrystal_I2C lcd = LiquidCrystal_I2C (0x27, 16, 2);
 Servo pan, tilt, leftEyebrow, rightEyebrow;
 
 // Software variables 
-float lastBlink, lastMove, lastScared;
-int movementDelay = 5; // seconds, don't worry
-Emotion emotion = NEUTRAL;
+unsigned long lastBlink, lastMove, lastScared;
+int movementDelay; // seconds
+Emotion emotion;
 MovementFrequency movementFrequency = NATURAL;
 
 void sendSignal (int value) {
@@ -149,6 +149,8 @@ void sendSignal (int value) {
 
 void moveHead() {
 	int angle = random (HEAD_MIN_ANGLE, HEAD_MAX_ANGLE);
+	Serial.print("Moving to ");
+	Serial.println(angle);
 	pan.write(angle);
 	tilt.write(angle);
 	sendSignal(MOVING_SOUNDS[emotion]);
@@ -159,10 +161,14 @@ void setEyebrows(bool direction) {
 	if (direction == NULL) direction = EYEBROW_DIRECTIONS[emotion];
 
 	int angle = direction == NULL ? 90
-		: direction ? 0 : 180;
+		: direction ? 0 : 160;
 
+	Serial.print("Moving eyebrows ");
+	Serial.println(angle);
+
+	int rightEyebrowAngle = abs (180 - angle);
 	leftEyebrow.write(angle);
-	rightEyebrow.write(angle);
+	rightEyebrow.write(rightEyebrowAngle);
 }
 
 void drawBitmap(uint8_t bitmap[8] = NULL);  // default argument
@@ -172,12 +178,14 @@ void drawBitmap(uint8_t bitmap[8]) {
 	if (bitmap == NULL) bitmap = BITMAPS[emotion];
 
 	// drapBitmap(int x, int y, int bitmap[8], int width, int height, bool status)
+	matrix.clear();
 	matrix.drawBitmap (0, 0, bitmap, 8, 8, LED_ON);
 	matrix.writeDisplay();  // needed to update matrix
 }
 
 void blink() {
-	drawBitmap(BITMAPS[0]);
+	Serial.println ("Blinking");
+	drawBitmap(BLINK);
 	delay(BLINK_DELAY);
 	sendSignal(BLINK_SOUND);
 	drawBitmap(BITMAPS[emotion]);
@@ -193,12 +201,21 @@ void printMessage(String text) {
 }
 
 void setEmotion(Emotion newEmotion) {
+	Serial.print("Changing emotion to ");
+	Serial.println(newEmotion);
 	emotion = newEmotion;
 	movementFrequency = MOVEMENT_FREQUENCIES [emotion];
 	drawBitmap();
 	setEyebrows();
 	printMessage();
 	sendSignal(SOUNDS[emotion]);
+}
+
+void setMovementFrequency(MovementFrequency frequency) {
+	Serial.print ("Changing movement frequency to ");
+	Serial.println(frequency);
+	movementFrequency = frequency;
+	movementDelay = MOVEMENT_FREQUENCIES[frequency];
 }
 
 bool isApproaching() {
@@ -221,6 +238,7 @@ bool isApproaching() {
 
 void setup() {
 	Serial.begin(9600);
+	Serial.println ("Setup...");
 
 	// Servo setup
 	pan.attach(PAN);
@@ -229,7 +247,9 @@ void setup() {
 	rightEyebrow.attach(RIGHT_EYEBROW);
 
 	// I2C devices
+	Serial.println("Initializing matrices");
 	matrix.begin(0x70);
+	Serial.println("Matrices initialized");
 	lcd.init();
 	lcd.backlight();
 	lcd.clear();
@@ -243,19 +263,33 @@ void setup() {
 
 	// Delay-based actions
 	lastBlink = lastMove = lastScared = millis();
+
+	// Set initial state
+	setEmotion(NEUTRAL);
+	setMovementFrequency(NATURAL);
 }
 
 void loop() {
+	Serial.println("Processing");
 	int time = millis();
-	if (lastBlink - time >= BLINK_INTERVAL) {
+	Serial.print("Timestamp: ");
+	Serial.println(time);
+	if (time - lastBlink >= BLINK_INTERVAL) {
+		Serial.println("Blink time");
 		blink();
 		lastBlink = time;
 	}
-	if (lastMove - time >= movementDelay * 1000) {
+	if (time - lastMove >= movementDelay * 1000) {
+		Serial.println("Time to move the head");
 		moveHead();
 		lastMove = time;
 	}
-	if (isApproaching()) setEmotion(SCARED);
-	else if (emotion == SCARED && lastScared - time >= CALM_DOWN_DELAY)
-		setEmotion(NEUTRAL);	
+	if (isApproaching()) {
+		Serial.println("Something's here");
+		if (emotion != SCARED) setEmotion(SCARED);
+	}
+	else if (emotion == SCARED && lastScared - time >= CALM_DOWN_DELAY) {
+		Serial.println("Everything's OK");
+		setEmotion(NEUTRAL);
+	}
 }

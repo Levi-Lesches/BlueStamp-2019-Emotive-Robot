@@ -32,7 +32,10 @@ void clearMatrix() {
 }
 
 void setup() {
+	Serial.begin (9600);
+	Serial.println("Start");
 	matrix.begin(0x70);
+	Serial.println("End");
 }
 
 void loop() {

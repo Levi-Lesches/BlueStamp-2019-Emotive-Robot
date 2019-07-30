@@ -53,8 +53,11 @@ void loop()
     // The i2c_scanner uses the return value of
     // the Write.endTransmisstion to see if
     // a device did acknowledge to the address.
+    Serial.println (address);
     Wire.beginTransmission(address);
+    Serial.print("Scanning address ");
     error = Wire.endTransmission();
+    Serial.println("Success");
  
     if (error == 0)
     {

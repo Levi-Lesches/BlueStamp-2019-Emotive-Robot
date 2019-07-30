@@ -9,4 +9,6 @@ void setup() {
 	lcd.print("Hello, World!");
 }
 
-void loop() {}
+void loop() {
+	lcd.print (".");
+}
