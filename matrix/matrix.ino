@@ -1,3 +1,16 @@
+/*
+	Simple sketch to blink a smiley face on the LED matrix
+	Helpful for debugging problems with the LED matrix
+
+	Pins: 
+		SCL -- A5
+		SDA -- A4
+	
+	Specs: 
+		Program storage: 24%
+		Dynamic memory: 24%
+*/
+
 #include <Adafruit_LEDBackpack.h>
 #include <Adafruit_GFX.h>
 
@@ -5,9 +18,6 @@
 
 bool processing = false;
 Adafruit_8x8matrix matrix = Adafruit_8x8matrix();
-
-// SCL to A5
-// SDA to A4
 
 // https://xantorohara.github.io/led-matrix-editor/#3c4299a581a5423c
 const uint8_t smile[8] = {
