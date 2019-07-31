@@ -1,3 +1,12 @@
+/*
+	This sketch scans the SD card and lists all files
+	Helpful for debugging SD card errors.
+
+	Specs on UNO: 
+		Storage space: 32%
+		Dynamic memory: 47%
+*/
+
 #include <SD.h>
 
 File root;
