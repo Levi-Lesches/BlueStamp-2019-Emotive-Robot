@@ -6,6 +6,7 @@
 
 	It is important to keep audio functionality separate since the WaveHC 
 	library uses a lot of memory thus straining any other functionality.  
+	Additionally, WaveHC interferes with the Arduino's internal timers.
 
 	Specs: 
 		Storage space: 29%
@@ -22,9 +23,8 @@ const String filenames[NUM_FILES] = {
 	"BLINK.WAV", "NEUTRAL.WAV", "SCARED.WAV", "NEUTRMOV.WAV", "SCAREMOV.WAV"
 };
 
-FatReader root;
 WaveHC wave;  // store audio data
-FatReader file;  // declare the file
+FatReader file, root;  // declare the file
 FatVolume volume;  // Needed for reading the SD card
 SdReader sdCard;  // declare the SD card
 
@@ -45,6 +45,7 @@ void play(String stringName, bool interrupt) {
 	if (!wave.create (file))  // Invalid .wav file
 		Serial.println ("Not a valid wave file");
 	wave.play();  // actually play the .wav file
+
 	if (interrupt) {  // need to stop all other code
 		while (wave.isplaying) {  // print dots to the Serial monitor
 			Serial.print(".");
@@ -60,6 +61,7 @@ void setup() {
 	delay (1000);
 	if (!sdCard.init()) Serial.println ("Card could not be read");
 	sdCard.partialBlockRead(true);  // Cool little trick for faster reading
+	
 	// This just initializes file reading and writing
 	if (!volume.init(sdCard)) Serial.println ("Volume could not be opened");
 	if (!root.openRoot(volume)) Serial.println ("Root could not be opened");
