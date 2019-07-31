@@ -1,4 +1,8 @@
-#define BUILTIN A0
+/* 
+	This sketch is used to test whether something is approaching the sensor
+	It prints "DANGER!" to the Serial monitor if something is within THRESHOLD cm
+	
+*/
 
 #define ECHO A3
 #define TRIGGER A2
@@ -15,7 +19,6 @@ bool isApproaching() {
 	digitalWrite(TRIGGER, LOW);
 
 	// Calculate the distance based on the incoming sound wave
-	// I'm relatively sure this is in cm
 	long distance = pulseIn(ECHO, HIGH) * 0.034 / 2;
 
 	// Determine whether soemthing is approaching
@@ -26,13 +29,13 @@ void setup() {
 	Serial.begin (9600);
 	pinMode (TRIGGER, OUTPUT);
 	pinMode (ECHO, INPUT);
-	pinMode (9, OUTPUT);
+	pinMode (13, OUTPUT);
 }
 
 void loop() {
 	if (isApproaching()) {
 		Serial.println ("DANGER!");
-		digitalWrite(9, HIGH);
-	} else digitalWrite(9, LOW);
+		digitalWrite(13, HIGH);
+	} else digitalWrite(13, LOW);
 	delay (200);
 }
