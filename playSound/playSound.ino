@@ -1,23 +1,27 @@
 /*
 	REMINDER: File names need to be all-caps
-	TODO: replace WaveHC library
+	TODO: replace WaveHC library for the SD library
 	TODO: Check wave.play for references to FatVolume and SdReader 
 
-	Specs on UNO
-	Storage space: 27%
-	dynamic memory: 71%
+	This sketch simply plays an audio file from the SD card
+	It needs a Wave Shield to work
 
 	pins that still work with audio: 
-	A0, (ultra 1)
-	A1, (ultra 2)
-	A2, 
-	A3, 
-	A4,
-	A5,
-	6, (BUILTIN, 
-	7,
-	8,
-	9,
+		A0, (I mapped this to the BUILTIN LED)
+		A1,
+		A2, 
+		A3, 
+		A4,
+		A5,
+		6,
+		7,
+		8,
+		9,
+
+	Specs on UNO
+		Storage space: 28%
+		Dynamic memory: 73%
+
 */
 
 // 2, 2, 2, 2, 2
