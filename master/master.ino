@@ -7,6 +7,11 @@
 		3. head/neck movements
 		4. proximity sensor (to be surprised)
 
+	So far, the head moves horizontally and vertically by the same random angle.
+	If the ultrasonic sensor is triggered, the head moves more frequently, and
+	the eyes get wider. After CALM_DOWN_DELAY, these behaviors stop. 
+
+	NOTE: AUDIO IS DISABLED AS IT COULD NOT BE READY IN TIME FOR THE DEMO
 	Audio is handled by the slave Arduino, which is equipped with a Wave Shield
 	Commands are sent using an analog signal which is used as an index to a list
 	More details can be found in the code for the slave Arduino
@@ -21,7 +26,7 @@
 
 	Specs: 
 		Storage space: 42% 
-		Dynamic memory: 36%
+		Dynamic memory: 43%
 */
 
 #include <Adafruit_LEDBackpack.h>
