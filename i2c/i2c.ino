@@ -9,7 +9,7 @@
 */
 
 #include <Wire.h>
- 
+
 void setup() {
   Wire.begin();
  
@@ -17,11 +17,10 @@ void setup() {
   Serial.println("\nI2C Scanner");
 }
  
- 
 void loop() {
   byte error, address;
   int nDevices;
- 
+
   Serial.println("Scanning...");
  
   nDevices = 0;
