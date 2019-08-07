@@ -1,7 +1,6 @@
 /* 
 	This sketch is used to test whether something is approaching the sensor
 	It prints "DANGER!" to the Serial monitor if something is within THRESHOLD cm
-	
 */
 
 #define ECHO A3

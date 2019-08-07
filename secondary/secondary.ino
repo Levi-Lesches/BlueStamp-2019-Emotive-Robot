@@ -1,7 +1,7 @@
 /*
 	Code for the secondary Arduino.
 	This device *only* controls audio, nothing else
-	Analog signals are sent from the master
+	Analog signals are sent from the primary Arduino
 	The signal sent corresponds with the index of the file in "filenames"
 
 	It is important to keep audio functionality separate since the WaveHC 
@@ -18,7 +18,7 @@
 #define SIGNAL A0
 #define NUM_FILES 5
 
-// This must sync up with the master's Sounds enum
+// This must sync up with the primary Arduino's Sounds enum
 const String filenames[NUM_FILES] = {
 	"BLINK.WAV", "NEUTRAL.WAV", "SCARED.WAV", "NEUTRMOV.WAV", "SCAREMOV.WAV"
 };
